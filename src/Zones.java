@@ -97,7 +97,57 @@ public class Zones {
      * [1] the cost of the cheapest route from the zone of cell 0 to the zone of the last cell.
      */
     public static long[] routes(Input.Slides s, int[] zoneOf, int zoneCount) {
-        // TODO
-        return new long[]{0, 0};
+        long INF = Long.MAX_VALUE / 4;
+        long[][] cost = new long[zoneCount][zoneCount];
+
+        for (int i = 0; i < zoneCount; i++) {
+            java.util.Arrays.fill(cost[i], INF);
+        }
+
+        // Find cheapest slide between each pair of zones
+        for (int i = 0; i < s.from().length; i++) {
+            int fromZone = zoneOf[s.from()[i]];
+            int toZone = zoneOf[s.to()[i]];
+
+            if (fromZone != toZone) {
+                cost[fromZone][toZone] =
+                        Math.min(cost[fromZone][toZone], s.time()[i]);
+            }
+        }
+
+        // Longest chain
+        long[] longest = new long[zoneCount];
+        java.util.Arrays.fill(longest, 1);
+
+        // Cheapest route
+        long[] distance = new long[zoneCount];
+        java.util.Arrays.fill(distance, INF);
+
+        int startZone = zoneOf[0];
+        int exitZone = zoneOf[s.n() - 1];
+        distance[startZone] = 0;
+
+        // Zone numbers are already topological order
+        for (int from = 0; from < zoneCount; from++) {
+            for (int to = from + 1; to < zoneCount; to++) {
+
+                if (cost[from][to] != INF) {
+                    longest[to] = Math.max(longest[to], longest[from] + 1);
+                    if (distance[from] != INF) {
+                        distance[to] =
+                                Math.min(
+                                        distance[to],
+                                        distance[from] + cost[from][to]
+                                );
+                    }
+                }
+            }
+        }
+
+        long flowStages = 0;
+        for (long x : longest) {
+            flowStages = Math.max(flowStages, x);
+        }
+        return new long[]{flowStages, distance[exitZone]};
     }
 }
