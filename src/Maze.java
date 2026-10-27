@@ -11,7 +11,19 @@ public class Maze {
      */
     public static int[] breakWalls(Input.Walls w) {
         // TODO
-        return new int[0];
+        DisjointSet dsu = new DisjointSet(w.cells());
+        int[] temp = new int[w.cells() - 1];
+        int count = 0;
+
+        for (int i = 0; i < w.count(); i++) {
+            if (dsu.union(w.a()[i], w.b()[i])) {
+                temp[count++] = i;
+                if (count == w.cells() - 1) {
+                    break;
+                }
+            }
+        }
+        return java.util.Arrays.copyOf(temp, count);
     }
 
     /**
