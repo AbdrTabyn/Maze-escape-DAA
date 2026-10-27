@@ -19,8 +19,75 @@ public class Zones {
      * Is DAG in Main is 1 when the number of zones equals the number of cells (no cycle), so you do not need a separate check.
      */
     public static int[] kosaraju(Input.Slides s) {
-        // TODO
-        return new int[s.n()];
+        int n = s.n();
+        int[][] from = Graphs.slidesFrom(s);
+        int[][] into = Graphs.slidesInto(s);
+
+        boolean[] visited = new boolean[n];
+        int[] order = new int[n];
+        int orderSize = 0;
+
+        // First DFS: finishing order
+        for (int start = 0; start < n; start++) {
+            if (visited[start]) continue;
+
+            int[] stack = new int[n];
+            int[] next = new int[n];
+
+            int top = 0;
+            stack[0] = start;
+            visited[start] = true;
+
+            while (top >= 0) {
+                int cell = stack[top];
+
+                if (next[top] < from[cell].length) {
+                    int slide = from[cell][next[top]++];
+                    int to = s.to()[slide];
+
+                    if (!visited[to]) {
+                        visited[to] = true;
+                        top++;
+                        stack[top] = to;
+                        next[top] = 0;
+                    }
+                } else {
+                    order[orderSize++] = cell;
+                    top--;
+                }
+            }
+        }
+
+        // Second DFS on reversed graph
+        int[] zoneOf = new int[n];
+        java.util.Arrays.fill(zoneOf, -1);
+        int zone = 0;
+
+        for (int i = n - 1; i >= 0; i--) {
+            int start = order[i];
+
+            if (zoneOf[start] != -1)
+                continue;
+            int[] stack = new int[n];
+            int top = 0;
+
+            stack[0] = start;
+            zoneOf[start] = zone;
+
+            while (top >= 0) {
+                int cell = stack[top--];
+                for (int slide : into[cell]) {
+                    int previous = s.from()[slide];
+
+                    if (zoneOf[previous] == -1) {
+                        zoneOf[previous] = zone;
+                        stack[++top] = previous;
+                    }
+                }
+            }
+            zone++;
+        }
+        return zoneOf;
     }
 
     /**
